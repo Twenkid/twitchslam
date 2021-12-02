@@ -23,7 +23,7 @@ class Display2D(object):
     pygame.display.flip()
 
 from multiprocessing import Process, Queue
-import pangolin
+import pypangolin as pangolin
 import OpenGL.GL as gl
 import numpy as np
 
@@ -34,6 +34,7 @@ class Display3D(object):
     self.vp = Process(target=self.viewer_thread, args=(self.q,))
     self.vp.daemon = True
     self.vp.start()
+    print("Init Display3D(object):")
 
   def viewer_thread(self, q):
     self.viewer_init(1024, 768)
@@ -53,7 +54,15 @@ class Display3D(object):
 
     # Create Interactive View in window
     self.dcam = pangolin.CreateDisplay()
-    self.dcam.SetBounds(0.0, 1.0, 0.0, 1.0, w/h)
+    #http://docs.ros.org/en/fuerte/api/pangolin_wrapper/html/structpangolin_1_1Attach.html
+
+
+    #self.dcam.SetBounds(0.0, 1.0, 0.0, 1.0, w/h)
+    #zero = pangolin.Attach.Attach(0.0)
+    #one = pangolin.Attach.Attach(1.0)
+    zero = pangolin.Attach(0.0)
+    one = pangolin.Attach(1.0)
+    self.dcam.SetBounds(zero, one, zero, one, w/h) 
     self.dcam.SetHandler(self.handler)
     # hack to avoid small Pangolin, no idea why it's *2
     self.dcam.Resize(pangolin.Viewport(0,0,w*2,h*2))
@@ -68,22 +77,42 @@ class Display3D(object):
     gl.glClearColor(0.0, 0.0, 0.0, 1.0)
     self.dcam.Activate(self.scam)
 
-    if self.state is not None:
-      if self.state[0].shape[0] >= 2:
+    bCameras = True #False #True #False
+    if self.state is not None:      
+      if self.state[0].shape[0] >= 2 and bCameras:
         # draw poses
         gl.glColor3f(0.0, 1.0, 0.0)
-        pangolin.DrawCameras(self.state[0][:-1])
+        #pangolin.DrawCameras(self.state[0][:-1])
+        #pangolin.DrawCamera(self.state[0][:-1]) #NO
+        #pangolin.glDrawPoints(self.state[0][-1:])
+        #ax1 = np.array(self.state[0][-1:], dtype=np.float32)
+        ax1 = np.asmatrix(self.state[0][-1:], dtype=np.float32)
+        print(ax1)
+        #pangolin.glDrawAxis(self.state[0][-1:], 1.0) #https://github.com/ankurhanda/Pangolin-local/blob/master/include/pangolin/gl/gldraw.h
+        pangolin.glDrawAxis(ax1, 1.0) #https://github.com/ankurhanda/Pangolin-local/blob/master/include/pangolin/gl/gldraw.h
 
-      if self.state[0].shape[0] >= 1:
+
+      if self.state[0].shape[0] >= 1 and bCameras:
         # draw current pose as yellow
         gl.glColor3f(1.0, 1.0, 0.0)
-        pangolin.DrawCameras(self.state[0][-1:])
+        #pangolin.DrawCameras(self.state[0][-1:]) #missing
+        #pangolin.glDrawPoints(self.state[0][-1:]) #No --> the arg is a 4x4 matrix --> 
+        #ax2 = np.array(self.state[0][-1:], dtype=np.float32)
+        ax2 = np.asmatrix(self.state[0][-1:], dtype=np.float32)
+        print(ax2)
+        #pangolin.glDrawAxis(self.state[0][-1:], 1.0)
+        pangolin.glDrawAxis(ax2, 1.0)
+
+        #pangolin.DrawCamera(self.state[0][-1:])  ... no: identity, ... 
 
       if self.state[1].shape[0] != 0:
         # draw keypoints
         gl.glPointSize(5)
         gl.glColor3f(1.0, 0.0, 0.0)
-        pangolin.DrawPoints(self.state[1], self.state[2])
+        #pangolin.DrawPoints(self.state[1], self.state[2])
+        pangolin.glDrawPoints(self.state[1]) #
+        pangolin.glDrawPoints(self.state[2]) #
+
 
     pangolin.FinishFrame()
 

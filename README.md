@@ -2,7 +2,7 @@
 
 A toy implementation of monocular SLAM written while livestreaming.
 
-Twenkid's update: refactoring of display.py in order to use the current Pangolin's function calls for SetBounds, glDrawPoints, glDrawAxis. 
+Twenkid's update: refactoring of display.py in order to use the current Pangolin's function calls for SetBounds, glDrawPoints, glDrawAxis. The last one is not exactly what the replaced DrawCameras does. Etc.
 
 <img width=600px src="https://raw.githubusercontent.com/geohot/twitchslam/master/example.png" />
 
